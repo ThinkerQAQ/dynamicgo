@@ -20,8 +20,9 @@ import (
 	"fmt"
 
 	"github.com/apache/thrift/lib/go/thrift"
-	"github.com/cloudwego/dynamicgo/http"
 	"github.com/cloudwego/thriftgo/parser"
+
+	"github.com/cloudwego/dynamicgo/http"
 )
 
 const (
@@ -335,6 +336,10 @@ func (f FieldDescriptor) Annotations() []parser.Annotation {
 // DefaultValue returns the default value of a field
 func (f FieldDescriptor) DefaultValue() *DefaultValue {
 	return f.defaultValue
+}
+
+func (f FieldDescriptor) String() string {
+	return fmt.Sprintf("%v:%v", f.ID(), f.Name())
 }
 
 // FunctionDescriptor idl function descriptor

@@ -323,6 +323,59 @@ func TestOptionPutThriftFilenameToAnnotation(t *testing.T) {
 	require.Equal(t, filename.Values, []string{path})
 }
 
+func TestNewFunctionDescriptorFromContent_absPath2(t *testing.T) {
+	content := `
+	include "/a/b/main.thrift"
+	include "/ref.thrift"
+
+	namespace go kitex.test.server
+
+	struct Base {
+		1: string DefaultField = ref.ConstString,
+		2: optional string OptionalField,
+		3: required string RequiredField,
+	}
+
+	service InboxService {
+		Base Method1(1: Base req)
+		Base Method2(1: Base req)
+	}
+	`
+	ref := `
+	include "/a/b/main.thrift"
+
+	namespace go ref
+
+	const string ConstString = "const string"
+	`
+	path := "/a/b/main.thrift"
+	includes := map[string]string{
+		path:          content,
+		"/ref.thrift": ref,
+	}
+
+	p, err := Options{PutThriftFilenameToAnnotation: true}.NewDescriptorFromContentWithMethod(context.Background(), path, content, includes, false, "Method1")
+	method, err := p.LookupFunctionByMethod("Method1")
+	if err != nil {
+		return
+	}
+	require.NoError(t, err)
+
+	req := method.Request().Struct().Fields()[0].Type()
+	annos := req.Struct().Annotations()
+	var filename *parser.Annotation
+	for i, a := range annos {
+		if a.Key == FilenameAnnotationKey {
+			filename = &annos[i]
+			break
+		}
+	}
+	fmt.Println(filename)
+	require.NoError(t, err)
+	require.NotNil(t, p.Functions()["Method1"])
+	require.Nil(t, p.Functions()["Method2"])
+}
+
 func TestNewFunctionDescriptorFromContent_absPath(t *testing.T) {
 	content := `
 	include "/a/b/main.thrift"
